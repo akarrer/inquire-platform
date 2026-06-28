@@ -88,7 +88,6 @@ export default function TestPage() {
   const [itemsCompleted, setItemsCompleted] = useState(0)
   const timer = useTimer()
 
-  // Create session on mount — eager so it's ready when Begin is clicked
   useEffect(() => {
     async function createSession() {
       try {
@@ -100,14 +99,13 @@ export default function TestPage() {
         if (!res.ok) throw new Error('Failed to create session')
         const session = await res.json()
         setSessionId(session.id)
-      } catch (e) {
+      } catch {
         setError('Could not start a session. Please refresh and try again.')
       }
     }
     createSession()
   }, [])
 
-  // Fetch next scenario
   const fetchNext = useCallback(async (sid: string) => {
     setAppState('loading')
     setError(null)
@@ -124,13 +122,12 @@ export default function TestPage() {
       timer.reset()
       setAppState('questioning')
       timer.start()
-    } catch (e) {
+    } catch {
       setError('Failed to load the next scenario. Please try again.')
       setAppState(appState === 'idle' ? 'idle' : 'scored')
     }
   }, [timer, appState])
 
-  // Handle Begin
   const handleBegin = () => {
     if (!sessionId) {
       setError('Session not ready yet. Please wait a moment and try again.')
@@ -139,7 +136,6 @@ export default function TestPage() {
     fetchNext(sessionId)
   }
 
-  // Handle submission
   const handleSubmit = async () => {
     if (!sessionId || !currentItem) return
     const filled = questions.filter((q) => q.trim().length > 0)
@@ -161,7 +157,6 @@ export default function TestPage() {
       if (!res.ok) throw new Error('Submission failed')
       const data = await res.json()
 
-      // Map API scores to our local type
       const mapped: ScoreResult[] = data.scores.map(
         (s: {
           d1Linguistic: number
@@ -187,7 +182,7 @@ export default function TestPage() {
       setScores(mapped)
       setItemsCompleted((c) => c + 1)
       setAppState('scored')
-    } catch (e) {
+    } catch {
       setError('Submission failed. Please try again.')
       setAppState('questioning')
       timer.start()
@@ -199,24 +194,27 @@ export default function TestPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
-      <header className="sticky top-0 z-20 bg-slate-950/90 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-        <span className="font-bold text-lg tracking-tight text-white">
-          Inquire
-          <span className="ml-2 text-xs font-normal text-violet-400 uppercase tracking-widest">
-            Assessment
-          </span>
-        </span>
-        <div className="flex items-center gap-4 text-sm text-slate-400">
+      <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 bg-indigo-700 rounded-md flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2L14 13H2L8 2Z" fill="white" fillOpacity="0.9"/>
+            </svg>
+          </div>
+          <span className="font-bold text-gray-900 text-base tracking-tight">Inquire</span>
+          <span className="text-gray-300 text-sm hidden sm:block">/ Assessment</span>
+        </Link>
+        <div className="flex items-center gap-5 text-sm text-gray-500">
           {itemsCompleted > 0 && (
             <span>
-              Scenarios completed:{' '}
-              <span className="text-slate-200 font-semibold">{itemsCompleted}</span>
+              Completed:{' '}
+              <span className="text-gray-800 font-semibold">{itemsCompleted}</span>
             </span>
           )}
           {appState === 'questioning' && (
-            <span className="font-mono text-violet-400 tabular-nums">
+            <span className="font-mono text-indigo-600 tabular-nums bg-indigo-50 px-2.5 py-1 rounded-md text-xs font-semibold">
               {timer.format(timer.elapsed)}
             </span>
           )}
@@ -226,44 +224,40 @@ export default function TestPage() {
       <div className="max-w-3xl mx-auto px-4 py-10">
         {/* Error banner */}
         {error && (
-          <div className="mb-6 bg-red-950/50 border border-red-800 text-red-300 rounded-lg px-4 py-3 text-sm">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
             {error}
           </div>
         )}
 
         {/* ── IDLE ── */}
         {appState === 'idle' && (
-          <div className="text-center py-20">
-            <div className="mb-3 text-violet-400 text-xs font-semibold uppercase tracking-widest">
+          <div className="text-center py-16">
+            <div className="mb-3 text-indigo-600 text-xs font-semibold uppercase tracking-widest">
               Adaptive Question Assessment
             </div>
-            <h1 className="text-4xl font-bold mb-4 tracking-tight">Ready to begin?</h1>
-            <p className="text-slate-400 text-base max-w-md mx-auto mb-2 leading-relaxed">
+            <h1 className="text-4xl font-bold mb-4 tracking-tight text-gray-900">Ready to begin?</h1>
+            <p className="text-gray-500 text-base max-w-md mx-auto mb-2 leading-relaxed">
               You will be shown real-world scenarios and asked to write 1–3 questions about each one.
             </p>
-            <p className="text-slate-500 text-sm max-w-md mx-auto mb-10 leading-relaxed">
+            <p className="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed">
               Your questions reveal how you think. There are no right answers — only the quality of your curiosity.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 text-left">
               {[
-                { icon: '⏱', label: 'Take your time', desc: 'No time limit. Think before you write.' },
-                { icon: '✏️', label: 'Write 1–3 questions', desc: 'One is required. More is encouraged.' },
-                { icon: '🔍', label: 'Ask deeply', desc: "Surface curiosity you actually have." },
-              ].map(({ icon, label, desc }) => (
-                <div
-                  key={label}
-                  className="bg-slate-900 border border-slate-800 rounded-lg p-4"
-                >
-                  <div className="text-xl mb-2">{icon}</div>
-                  <div className="text-sm font-semibold text-slate-200 mb-1">{label}</div>
-                  <div className="text-xs text-slate-500 leading-relaxed">{desc}</div>
+                { label: 'Take your time', desc: 'No time limit. Think carefully before you write.' },
+                { label: 'Write 1–3 questions', desc: 'One is required. More is encouraged.' },
+                { label: 'Ask deeply', desc: 'Surface the curiosity you actually have.' },
+              ].map(({ label, desc }) => (
+                <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                  <div className="text-sm font-semibold text-gray-900 mb-1">{label}</div>
+                  <div className="text-xs text-gray-500 leading-relaxed">{desc}</div>
                 </div>
               ))}
             </div>
             <button
               onClick={handleBegin}
               disabled={!sessionId}
-              className="bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-10 py-3.5 rounded-lg transition-colors text-base"
+              className="bg-indigo-700 hover:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-10 py-3.5 rounded-lg transition-colors text-base"
             >
               {sessionId ? 'Begin Assessment' : 'Preparing…'}
             </button>
@@ -273,14 +267,14 @@ export default function TestPage() {
         {/* ── LOADING ── */}
         {appState === 'loading' && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-slate-400 text-sm">Loading scenario…</p>
+            <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-400 text-sm">Loading scenario…</p>
           </div>
         )}
 
         {/* ── QUESTIONING ── */}
         {appState === 'questioning' && currentItem && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <ScenarioCard
               domain={currentItem.scenario.domain}
               contextLevel={currentItem.scenario.contextLevel}
@@ -289,13 +283,13 @@ export default function TestPage() {
               contextText={currentItem.scenario.contextText}
             />
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-6">
+            <div className="bg-white border border-gray-200 rounded-xl px-6 py-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
                   Your Questions
                 </h3>
-                <span className="text-xs text-slate-500 italic">
-                  Write the most insightful questions you can. You are not answering — you are asking.
+                <span className="text-xs text-gray-400 italic hidden sm:block">
+                  You are asking, not answering.
                 </span>
               </div>
               <QuestionInput
@@ -310,7 +304,7 @@ export default function TestPage() {
                 <button
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  className="bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-7 py-2.5 rounded-lg transition-colors text-sm"
+                  className="bg-indigo-700 hover:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-7 py-2.5 rounded-lg transition-colors text-sm"
                 >
                   Submit My Questions
                 </button>
@@ -322,33 +316,30 @@ export default function TestPage() {
         {/* ── SUBMITTING ── */}
         {appState === 'submitting' && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-slate-300 text-base font-medium">Analyzing your questions…</p>
-            <p className="text-slate-500 text-sm">Claude is scoring 5 dimensions of inquiry quality</p>
+            <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-800 text-base font-semibold">Milo is reviewing your questions…</p>
+            <p className="text-gray-400 text-sm">Evaluating 5 dimensions of inquiry quality</p>
           </div>
         )}
 
         {/* ── SCORED ── */}
         {appState === 'scored' && currentItem && scores.length > 0 && (
-          <div className="space-y-6">
-            {/* Scenario recap header */}
-            <div className="flex items-center gap-2 text-slate-400 text-sm">
-              <span>Scores for:</span>
-              <span className="text-slate-200 font-medium">{currentItem.scenario.title}</span>
+          <div className="space-y-5">
+            <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <span>Results for:</span>
+              <span className="text-gray-900 font-semibold">{currentItem.scenario.title}</span>
             </div>
 
-            {/* Overall composite if multiple questions */}
             {scores.length > 1 && (
-              <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-4 flex items-center gap-4">
-                <span className="text-slate-400 text-sm">Session composite (this item)</span>
-                <span className="text-lg font-bold text-white">
-                  {(scores.reduce((s, r) => s + r.composite, 0) / scores.length).toFixed(2)}{' '}
-                  <span className="text-slate-500 font-normal text-sm">/ 5</span>
+              <div className="bg-white border border-gray-200 rounded-xl px-6 py-4 shadow-sm flex items-center gap-4">
+                <span className="text-gray-500 text-sm">Item composite</span>
+                <span className="text-lg font-bold text-gray-900">
+                  {(scores.reduce((s, r) => s + r.composite, 0) / scores.length).toFixed(2)}
+                  <span className="text-gray-400 font-normal text-sm"> / 5</span>
                 </span>
               </div>
             )}
 
-            {/* Per-question score cards */}
             <div className="space-y-4">
               {scores.map((s, i) => (
                 <ScoreCard
@@ -364,7 +355,7 @@ export default function TestPage() {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => sessionId && fetchNext(sessionId)}
-                className="bg-violet-600 hover:bg-violet-500 text-white font-semibold px-7 py-2.5 rounded-lg transition-colors text-sm"
+                className="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold px-7 py-2.5 rounded-lg transition-colors text-sm"
               >
                 Next Scenario →
               </button>
@@ -375,19 +366,24 @@ export default function TestPage() {
         {/* ── COMPLETE ── */}
         {appState === 'complete' && (
           <div className="text-center py-24">
-            <div className="mb-3 text-green-400 text-xs font-semibold uppercase tracking-widest">
+            <div className="w-16 h-16 bg-emerald-50 border-2 border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="mb-2 text-emerald-600 text-xs font-semibold uppercase tracking-widest">
               Assessment Complete
             </div>
-            <h1 className="text-4xl font-bold mb-4 tracking-tight">Well done.</h1>
-            <p className="text-slate-400 text-base max-w-md mx-auto mb-10 leading-relaxed">
+            <h1 className="text-4xl font-bold mb-4 tracking-tight text-gray-900">Well done.</h1>
+            <p className="text-gray-500 text-base max-w-md mx-auto mb-10 leading-relaxed">
               You completed{' '}
-              <span className="text-slate-200 font-semibold">{itemsCompleted}</span>{' '}
-              {itemsCompleted === 1 ? 'scenario' : 'scenarios'}. Your results are ready.
+              <span className="text-gray-900 font-semibold">{itemsCompleted}</span>{' '}
+              {itemsCompleted === 1 ? 'scenario' : 'scenarios'}. Milo has finished scoring your responses.
             </p>
             {sessionId && (
               <Link
                 href={`/results/${sessionId}`}
-                className="bg-violet-600 hover:bg-violet-500 text-white font-semibold px-10 py-3.5 rounded-lg transition-colors text-base"
+                className="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold px-10 py-3.5 rounded-lg transition-colors text-base"
               >
                 View Your Results
               </Link>
@@ -395,6 +391,6 @@ export default function TestPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   )
 }

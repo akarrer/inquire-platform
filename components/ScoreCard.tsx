@@ -18,24 +18,24 @@ function DimensionBar({ label, weight, score, animate }: DimensionBarProps) {
       setWidth(pct)
       return
     }
-    const t = setTimeout(() => setWidth(pct), 50)
+    const t = setTimeout(() => setWidth(pct), 80)
     return () => clearTimeout(t)
   }, [pct, animate])
 
-  let barColor = 'bg-red-500'
-  if (score > 3.5) barColor = 'bg-green-500'
-  else if (score >= 3) barColor = 'bg-yellow-500'
+  let barColor = 'bg-red-400'
+  if (score > 3.5) barColor = 'bg-emerald-500'
+  else if (score >= 2.5) barColor = 'bg-amber-400'
 
   return (
-    <div className="mb-3">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs text-slate-300">
-          {label}{' '}
-          <span className="text-slate-500 font-normal">({weight})</span>
+    <div className="mb-3.5">
+      <div className="flex justify-between items-center mb-1.5">
+        <span className="text-xs font-medium text-gray-700">
+          {label}
+          <span className="text-gray-400 font-normal ml-1">({weight})</span>
         </span>
-        <span className="text-xs font-semibold text-slate-200">{score.toFixed(1)}/5</span>
+        <span className="text-xs font-semibold text-gray-800 tabular-nums">{score.toFixed(1)}<span className="text-gray-400 font-normal">/5</span></span>
       </div>
-      <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
           style={{ width: `${width}%` }}
@@ -68,47 +68,47 @@ export default function ScoreCard({
   score,
   animate = true,
 }: ScoreCardProps) {
-  let compositeColor = 'text-red-400 border-red-700 bg-red-950/30'
-  if (score.composite > 3.5) compositeColor = 'text-green-400 border-green-700 bg-green-950/30'
-  else if (score.composite >= 3) compositeColor = 'text-yellow-400 border-yellow-700 bg-yellow-950/30'
+  let compositeBadge = 'bg-red-50 text-red-700 border-red-200'
+  if (score.composite > 3.5) compositeBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  else if (score.composite >= 2.5) compositeBadge = 'bg-amber-50 text-amber-700 border-amber-200'
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       {/* Question header */}
-      <div className="px-5 py-4 border-b border-slate-800 flex items-start gap-3">
-        <span className="shrink-0 w-6 h-6 rounded-full bg-violet-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-start gap-3 bg-gray-50">
+        <span className="shrink-0 w-6 h-6 rounded-full bg-indigo-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">
           {questionIndex + 1}
         </span>
-        <p className="text-slate-200 text-sm leading-relaxed italic">"{questionText}"</p>
+        <p className="text-gray-700 text-sm leading-relaxed italic">&ldquo;{questionText}&rdquo;</p>
       </div>
 
-      <div className="px-5 py-4">
+      <div className="px-5 py-5">
         {/* Composite score */}
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
+        <div className="flex items-center gap-3 mb-5">
+          <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">
             Composite Score
           </span>
-          <span
-            className={`px-3 py-1 rounded-full border text-sm font-bold ${compositeColor}`}
-          >
+          <span className={`px-3 py-1 rounded-full border text-sm font-bold ${compositeBadge}`}>
             {score.composite.toFixed(2)} / 5
           </span>
         </div>
 
         {/* Dimension bars */}
-        <DimensionBar label="D1 Linguistic" weight="15%" score={score.d1Linguistic} animate={animate} />
-        <DimensionBar label="D2 Content Knowledge" weight="30%" score={score.d2ContentKnowledge} animate={animate} />
-        <DimensionBar label="D3 Critical Thinking" weight="30%" score={score.d3CriticalThinking} animate={animate} />
-        <DimensionBar label="D4 Inquiry Depth" weight="25%" score={score.d4InquirySoph} animate={animate} />
-        <DimensionBar label="D5 Reading Comprehension" weight="—" score={score.d5ContextIntegration} animate={animate} />
+        <DimensionBar label="Linguistic Sophistication" weight="15%" score={score.d1Linguistic} animate={animate} />
+        <DimensionBar label="Content Knowledge" weight="30%" score={score.d2ContentKnowledge} animate={animate} />
+        <DimensionBar label="Critical Thinking" weight="30%" score={score.d3CriticalThinking} animate={animate} />
+        <DimensionBar label="Inquiry Depth" weight="25%" score={score.d4InquirySoph} animate={animate} />
+        <DimensionBar label="Reading Comprehension" weight="—" score={score.d5ContextIntegration} animate={animate} />
 
-        {/* Feedback */}
+        {/* Milo's Feedback */}
         {score.feedback && (
-          <div className="mt-4 pt-4 border-t border-slate-800">
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Feedback
+          <div className="mt-5 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+                Milo&apos;s Feedback
+              </span>
             </div>
-            <p className="text-slate-300 text-sm leading-relaxed">{score.feedback}</p>
+            <p className="text-gray-600 text-sm leading-relaxed">{score.feedback}</p>
           </div>
         )}
       </div>
