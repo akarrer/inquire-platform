@@ -16,6 +16,8 @@ export async function POST() {
     return NextResponse.json(session)
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    const url = process.env.DATABASE_URL ?? 'NOT_SET'
+    const urlHost = (() => { try { return new URL(url).hostname } catch { return 'PARSE_FAIL:' + url.slice(0, 40) } })()
+    return NextResponse.json({ error: msg, dbHost: urlHost }, { status: 500 })
   }
 }
