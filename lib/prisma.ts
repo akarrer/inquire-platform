@@ -1,13 +1,15 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL!
+  const adapter = new PrismaPg({ connectionString })
+  return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0])
+}
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 export const prisma: PrismaClient =
-  globalForPrisma.prisma ??
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new (PrismaClient as any)({
-    datasourceUrl: process.env.DATABASE_URL,
-    log: ['error'],
-  })
+  globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
