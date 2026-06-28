@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  EDUCATOR
+  ADMIN
+}
+
+enum Domain {
+  MATH
+  ELA
+  SCIENCE
+}
+
+enum ContextLevel {
+  SPARSE
+  PARTIAL
+  RICH
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  SUSPENDED
+}
+
+model User {
+  id        String        @id @default(cuid())
+  email     String        @unique
+  name      String?
+  role      Role          @default(STUDENT)
+  createdAt DateTime      @default(now())
+  sessions  TestSession[]
+}
+
+model Scenario {
+  id           String        @id @default(cuid())
+  domain       Domain
+  contextLevel ContextLevel
+  title        String
+  scenarioText String        @db.Text
+  contextText  String?       @db.Text
+  difficulty   Float         @default(0.0)
+  tags         String[]
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  items        SessionItem[]
+}
+
+model TestSession {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  abilityEstimate Float?
+  abilitySE       Float?
+  sparseTheta     Float?
+  richTheta       Float?
+  status          SessionStatus @default(IN_PROGRESS)
+  items           SessionItem[]
+}
+
+model SessionItem {
+  id          String              @id @default(cuid())
+  sessionId   String
+  session     TestSession         @relation(fields: [sessionId], references: [id])
+  scenarioId  String
+  scenario    Scenario            @relation(fields: [scenarioId], references: [id])
+  ordinal     Int
+  presentedAt DateTime            @default(now())
+  submittedAt DateTime?
+  timeOnTask  Int?
+  scaffolded  Boolean             @default(false)
+  questions   SubmittedQuestion[]
+}
+
+model SubmittedQuestion {
+  id            String         @id @default(cuid())
+  sessionItemId String
+  sessionItem   SessionItem    @relation(fields: [sessionItemId], references: [id])
+  questionText  String         @db.Text
+  ordinal       Int
+  submittedAt   DateTime       @default(now())
+  score         QuestionScore?
+}
+
+model QuestionScore {
+  id                   String            @id @default(cuid())
+  questionId           String            @unique
+  question             SubmittedQuestion @relation(fields: [questionId], references: [id])
+  d1Linguistic         Float
+  d2ContentKnowledge   Float
+  d3CriticalThinking   Float
+  d4InquirySoph        Float
+  d5ContextIntegration Float
+  composite            Float
+  feedback             String            @db.Text
+  linguisticRationale  String?           @db.Text
+  contentRationale     String?           @db.Text
+  thinkingRationale    String?           @db.Text
+  inquiryRationale     String?           @db.Text
+  contextRationale     String?           @db.Text
+  rawResponse          Json?
+  scoredAt             DateTime          @default(now())
+}
